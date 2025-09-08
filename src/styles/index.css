@@ -1,0 +1,376 @@
+/* ========================================
+   🎨 GLOBAL STYLES
+   ======================================== */
+
+@import './scrollbar.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   🎨 SHADCN UI VARIABLES
+   ======================================== */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+
+  * {
+    @apply border-gray-200;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ========================================
+   🎨 CUSTOM SCROLLBAR STYLES
+   ======================================== */
+
+/* Pipeline Horizontal Scrollbar */
+.pipeline-horizontal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #01818e #f3f4f6;
+}
+
+.pipeline-horizontal-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.pipeline-horizontal-scrollbar::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.pipeline-horizontal-scrollbar::-webkit-scrollbar-thumb {
+  background: #01818e;
+  border-radius: 4px;
+}
+
+.pipeline-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #016d78;
+}
+
+/* Kanban Scrollbar */
+.kanban-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #01818e #f3f4f6;
+}
+
+.kanban-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.kanban-scrollbar::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.kanban-scrollbar::-webkit-scrollbar-thumb {
+  background: #01818e;
+  border-radius: 4px;
+}
+
+.kanban-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #016d78;
+}
+
+/* General Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Custom scrollbar for task list */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background: #64748b;
+}
+
+/* Firefox scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+/* Smooth scrolling */
+.custom-scrollbar {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for mobile */
+@media (max-width: 768px) {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+}
+
+/* ========================================
+   🎨 ANIMATION CLASSES
+   ======================================== */
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   🎨 UTILITY CLASSES
+   ======================================== */
+
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* ========================================
+   🎨 RESPONSIVE UTILITIES
+   ======================================== */
+
+@media (max-width: 640px) {
+  .kanban-scrollbar::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .pipeline-horizontal-scrollbar::-webkit-scrollbar {
+    height: 6px;
+  }
+}
+
+/* Base styles */
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
+
+  html {
+    @apply font-sans text-gray-800 bg-gray-50;
+  }
+
+  body {
+    @apply font-sans text-gray-800 bg-gray-50 m-0 p-0;
+  }
+
+  #root {
+    @apply m-0 p-0;
+  }
+}
+
+/* Component styles */
+@layer components {
+  .btn-primary {
+    @apply rounded-2xl p-1 shadow-md bg-white text-black transition-all;
+  }
+
+  .status-badge {
+    @apply bg-emerald-100 text-emerald-800;
+  }
+
+  .status-badge.warning {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .status-badge.info {
+    @apply bg-sky-100 text-sky-800;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-md border border-gray-200 p-6;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-black focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 transition-all duration-200;
+  }
+
+  .btn-outline {
+    @apply px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 transition-all duration-200;
+  }
+
+  .modal {
+    @apply bg-white rounded-xl p-6 w-full max-w-md shadow-xl animate-fade-in transition-all;
+  }
+
+  .chart-container {
+    @apply w-full h-80 bg-white rounded-xl shadow-sm p-4;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .animate-bounce-in {
+    animation: bounceIn 0.6s ease-out;
+  }
+
+  @keyframes bounceIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+/* Form styles */
+.form-input {
+  @apply bg-white text-black border border-gray-300 rounded-md transition-colors duration-300;
+}
+
+.form-select {
+  @apply bg-white text-black border border-gray-300 mt-1 rounded-md shadow-lg z-50;
+}
+
+.form-tag {
+  @apply bg-gray-100 text-black rounded px-2 py-0.5;
+}
+
+.form-label {
+  @apply text-gray-900;
+}
+
+.form-error {
+  @apply text-gray-500 hover:bg-red-500 hover:text-white rounded-sm;
+}
+
+.form-text {
+  @apply text-black;
+}
+
+.form-placeholder {
+  @apply text-gray-400;
+}
+
+.form-option {
+  @apply text-black bg-white cursor-pointer transition-colors;
+}

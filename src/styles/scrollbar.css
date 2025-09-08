@@ -1,0 +1,115 @@
+/* ========================================
+   🎨 PROFESSIONAL SCROLLBAR STYLING
+   ======================================== */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db; /* gray-300 */
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af; /* gray-400 */
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #6b7280; /* gray-500 */
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+/* Custom scrollbar classes for specific components */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #e5e7eb; /* gray-200 */
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db; /* gray-300 */
+}
+
+/* Pipeline specific scrollbar */
+.pipeline-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.pipeline-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.pipeline-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.pipeline-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb; /* gray-200 */
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.pipeline-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db; /* gray-300 */
+}
+
+/* Horizontal scrollbar for pipeline cards */
+.pipeline-horizontal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.pipeline-horizontal-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.pipeline-horizontal-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.pipeline-horizontal-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb; /* gray-200 */
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.pipeline-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db; /* gray-300 */
+} 

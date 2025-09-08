@@ -1,0 +1,834 @@
+// ========================================
+// 🎯 CALENDAR API SERVICE
+// =============    // Build query parameters - API expects startTime/endTime, not startDate/endDate
+    const params = new URLSearchParams();
+    
+    // Add required locationId for token access
+    params.append('locationId', filters.locationId || 'b7vHWUGVUNQGoIlAXabY');
+    
+    // Add required parameters - at least one of these is required
+    if (filters.calendarId) {
+      params.append('calendarId', filters.calendarId);
+    } else if (filters.userId) {
+      params.append('userId', filters.userId);
+    } else if (filters.groupId) {
+      params.append('groupId', filters.groupId);
+    } else {
+      // Default to your calendar ID if none provided
+      params.append('calendarId', 'sV3BiXrjzbfo1tSUdyHO');
+    }
+    
+    // Add time range parameters (use startTime/endTime instead of startDate/endDate)
+    if (filters.startTime) params.append('startTime', filters.startTime);
+    if (filters.endTime) params.append('endTime', filters.endTime);
+    
+    // Add optional filters (but not limit, startDate, endDate as per error)
+    if (filters.contactId) params.append('contactId', filters.contactId);
+    if (filters.offset) params.append('offset', filters.offset);
+
+import { toast } from 'react-hot-toast';
+import { createLogger } from '@utils/logger';
+import { GHL_CONFIG, getGHLHeaders, validateGHLConfig } from '@config/ghlConfig';
+
+const calendarLogger = createLogger('CalendarAPI');
+
+// Validate configuration on import
+const configValidation = validateGHLConfig();
+if (!configValidation.isValid) {
+  calendarLogger.warn('GHL Configuration Issues:', configValidation.issues);
+}
+
+// ============================================================================
+// 📥 GET REQUESTS
+// ============================================================================
+
+/**
+ * 🎯 Format GHL calendar events for display
+ * Converts GHL API response format to calendar display format
+ */
+export const formatCalendarEvents = (ghlEvents = []) => {
+  return ghlEvents.map(event => {
+    // Determine color based on appointment status
+    let backgroundColor, borderColor;
+    
+    switch (event.appointmentStatus) {
+      case 'confirmed':
+        backgroundColor = '#059669'; // Green
+        borderColor = '#047857';
+        break;
+      case 'cancelled':
+        backgroundColor = '#DC2626'; // Red
+        borderColor = '#B91C1C';
+        break;
+      case 'no-show':
+        backgroundColor = '#6B7280'; // Gray
+        borderColor = '#4B5563';
+        break;
+      default:
+        backgroundColor = '#4F46E5'; // Blue
+        borderColor = '#3730A3';
+    }
+
+    return {
+      id: `ghl-event-${event.id}`,
+      title: event.title || 'GHL Event',
+      start: event.startTime,
+      end: event.endTime,
+      category: 'GHL Event',
+      description: event.notes || '',
+      location: event.address || '',
+      attendees: event.users?.join(', ') || '',
+      backgroundColor,
+      borderColor,
+      textColor: '#ffffff',
+      extendedProps: {
+        ghlEventId: event.id,
+        calendarId: event.calendarId,
+        locationId: event.locationId,
+        contactId: event.contactId,
+        groupId: event.groupId,
+        appointmentStatus: event.appointmentStatus,
+        assignedUserId: event.assignedUserId,
+        users: event.users || [],
+        isRecurring: event.isRecurring === 'true',
+        rrule: event.rrule,
+        assignedResources: event.assignedResources || [],
+        createdBy: event.createdBy,
+        masterEventId: event.masterEventId,
+        dateAdded: event.dateAdded,
+        dateUpdated: event.dateUpdated,
+        isGHLEvent: true,
+      },
+    };
+  });
+};
+
+/**
+ * 🎯 GET - Fetch all calendar events
+ * Returns all events from the GHL calendar using the events endpoint
+ */
+export const fetchCalendarEvents = async (filters = {}) => {
+  try {
+    calendarLogger.info('Fetching calendar events from GHL', { filters });
+
+    // Build query parameters - API expects startTime/endTime, not startDate/endDate
+    const params = new URLSearchParams();
+    
+    // Add required parameters - at least one of these is required
+    if (filters.calendarId) {
+      params.append('calendarId', filters.calendarId);
+    } else if (filters.userId) {
+      params.append('userId', filters.userId);
+    } else if (filters.groupId) {
+      params.append('groupId', filters.groupId);
+    } else {
+      // Default to your calendar ID if none provided
+      params.append('calendarId', 'sV3BiXrjzbfo1tSUdyHO');
+    }
+    
+    if (filters.locationId) params.append('locationId', filters.locationId);
+    
+    // Add time range parameters (use startTime/endTime instead of startDate/endDate)
+    if (filters.startTime) params.append('startTime', filters.startTime);
+    if (filters.endTime) params.append('endTime', filters.endTime);
+    
+    // Add optional filters (but not limit, startDate, endDate as per error)
+    if (filters.contactId) params.append('contactId', filters.contactId);
+    if (filters.offset) params.append('offset', filters.offset);
+
+    const response = await fetch(
+      `https://services.leadconnectorhq.com/calendars/events?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer pit-1dd731f9-e51f-40f7-bf4e-9e8cd31ed75f',
+          'Version': '2021-04-15',
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const events = data.events || [];
+
+    calendarLogger.success('Calendar events fetched successfully', { count: events.length });
+
+    return {
+      success: true,
+      data: events,
+      meta: data.meta || null,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error fetching calendar events', error);
+    return {
+      success: false,
+      error: error.message,
+      data: [],
+    };
+  }
+};
+
+/**
+ * 🎯 GET - Fetch all calendar appointments
+ * Returns all appointments from the GHL calendar
+ */
+export const fetchAppointments = async (filters = {}) => {
+  try {
+    calendarLogger.info('Fetching appointments from GHL calendar', { filters });
+
+    // GHL uses the calendar endpoint for appointments
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments`,
+      {
+        method: 'GET',
+        headers: getGHLHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const appointments = data.appointments || data;
+
+    calendarLogger.success('Appointments fetched successfully', { count: appointments.length });
+
+    return {
+      success: true,
+      data: appointments,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error fetching appointments', error);
+    return {
+      success: false,
+      error: error.message,
+      data: [],
+    };
+  }
+};
+
+/**
+ * 🎯 GET - Fetch appointments by date range
+ * Returns appointments within a specific date range
+ */
+export const fetchAppointmentsByDateRange = async (startDate, endDate, filters = {}) => {
+  try {
+    calendarLogger.info('Fetching appointments by date range', { startDate, endDate, filters });
+    // Ensure dates are in ISO format
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments?startDate=${startDate}&endDate=${endDate}`,
+      {
+        method: 'GET',
+        headers: getGHLHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const appointments = data.appointments || data;
+
+    calendarLogger.success('Date range appointments fetched successfully', {
+      startDate,
+      endDate,
+      count: appointments.length,
+    });
+
+    return {
+      success: true,
+      data: appointments,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error fetching appointments by date range', error);
+    return {
+      success: false,
+      error: error.message,
+      data: [],
+    };
+  }
+};
+
+/**
+ * 🎯 GET - Fetch appointments by user
+ * Returns appointments assigned to a specific user
+ */
+export const fetchAppointmentsByUser = async (userId, filters = {}) => {
+  try {
+    calendarLogger.info('Fetching appointments for user', { userId, filters });
+
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments?assignedTo=${userId}`,
+      {
+        method: 'GET',
+        headers: getGHLHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const appointments = data.appointments || data;
+
+    calendarLogger.success('User appointments fetched successfully', { userId, count: appointments.length });
+
+    return {
+      success: true,
+      data: appointments,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error fetching user appointments', error);
+    return {
+      success: false,
+      error: error.message,
+      data: [],
+    };
+  }
+};
+
+/**
+ * 🎯 GET - Fetch appointment by ID
+ * Returns a specific appointment by its ID
+ */
+export const fetchAppointmentById = async (appointmentId) => {
+  try {
+    calendarLogger.info('Fetching appointment by ID', { appointmentId });
+
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments/${appointmentId}`,
+      {
+        method: 'GET',
+        headers: getGHLHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const appointment = await response.json();
+
+    calendarLogger.success('Appointment fetched successfully', { appointmentId });
+
+    return {
+      success: true,
+      data: appointment,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error fetching appointment by ID', error);
+    return {
+      success: false,
+      error: error.message,
+      data: null,
+    };
+  }
+};
+
+/**
+ * 🎯 GET - Fetch available time slots
+ * Returns available time slots for a specific date
+ */
+export const fetchAvailableTimeSlots = async (date, duration = 30, userId = null) => {
+  try {
+    calendarLogger.info('Fetching available time slots', { date, duration, userId });
+
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/available-slots?date=${date}&duration=${duration}${userId ? `&userId=${userId}` : ''}`,
+      {
+        method: 'GET',
+        headers: getGHLHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const timeSlots = data.timeSlots || data;
+
+    calendarLogger.success('Available time slots fetched successfully', {
+      date,
+      duration,
+      count: timeSlots.length,
+    });
+
+    return {
+      success: true,
+      data: timeSlots,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error fetching available time slots', error);
+    return {
+      success: false,
+      error: error.message,
+      data: [],
+    };
+  }
+};
+
+// ============================================================================
+// 📤 POST REQUESTS
+// ============================================================================
+
+/**
+ * ➕ POST - Create new appointment
+ * Creates a new appointment in the GHL calendar
+ */
+export const bookGhlAppointment = async (appointmentData) => {
+  try {
+    calendarLogger.info('Booking GHL appointment', { appointmentData });
+
+    const response = await fetch(
+      'https://services.leadconnectorhq.com/calendars/events/appointments',
+      {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer pit-1dd731f9-e51f-40f7-bf4e-9e8cd31ed75f',
+          'Content-Type': 'application/json',
+          'Version': '2021-04-15',
+        },
+        body: JSON.stringify(appointmentData),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`HTTP error! Status: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+
+    calendarLogger.success('GHL appointment booked successfully', {
+      appointmentId: data?.id,
+      contactId: data?.contact?.id,
+    });
+
+    return {
+      success: true,
+      data,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error booking GHL appointment', error);
+    return {
+      success: false,
+      error: error.message,
+      data: null,
+    };
+  }
+};
+
+
+/**
+ * ➕ POST - Create recurring appointment
+ * Creates a series of recurring appointments
+ */
+export const createRecurringAppointment = async (appointmentData, recurrencePattern) => {
+  try {
+    calendarLogger.info('Creating recurring appointment', { appointmentData, recurrencePattern });
+
+    const ghlAppointmentData = {
+      ...appointmentData,
+      locationId: GHL_CONFIG.locationId,
+      recurrence: recurrencePattern,
+    };
+
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments/recurring`,
+      {
+        method: 'POST',
+        headers: getGHLHeaders(),
+        body: JSON.stringify(ghlAppointmentData),
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+    }
+
+    const recurringAppointments = await response.json();
+
+    calendarLogger.success('Recurring appointments created successfully', {
+      count: recurringAppointments.length,
+    });
+    toast.success(`✅ ${recurringAppointments.length} recurring appointments created!`);
+
+    return {
+      success: true,
+      data: recurringAppointments,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error creating recurring appointment', error);
+    toast.error(`❌ Failed to create recurring appointment: ${error.message}`);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// ============================================================================
+// 📝 PUT REQUESTS
+// ============================================================================
+
+/**
+ * 📝 PUT - Update appointment
+ * Updates an existing appointment
+ */
+export const updateAppointment = async (appointmentId, updates) => {
+  try {
+    calendarLogger.info('Updating appointment', { appointmentId, updates });
+
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments/${appointmentId}`,
+      {
+        method: 'PUT',
+        headers: getGHLHeaders(),
+        body: JSON.stringify(updates),
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+    }
+
+    const updatedAppointment = await response.json();
+
+    calendarLogger.success('Appointment updated successfully', { appointmentId });
+    toast.success('✅ Appointment updated successfully!');
+
+    return {
+      success: true,
+      data: updatedAppointment,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error updating appointment', error);
+    toast.error(`❌ Failed to update appointment: ${error.message}`);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+/**
+ * ✅ PUT - Mark appointment as completed
+ * Marks an appointment as completed
+ */
+export const completeAppointment = async (appointmentId) => {
+  try {
+    calendarLogger.info('Marking appointment as completed', { appointmentId });
+
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments/${appointmentId}`,
+      {
+        method: 'PUT',
+        headers: getGHLHeaders(),
+        body: JSON.stringify({ status: 'completed' }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const completedAppointment = await response.json();
+
+    calendarLogger.success('Appointment marked as completed', { appointmentId });
+    toast.success('✅ Appointment completed!');
+
+    return {
+      success: true,
+      data: completedAppointment,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error completing appointment', error);
+    toast.error(`❌ Failed to complete appointment: ${error.message}`);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+/**
+ * ❌ PUT - Cancel appointment
+ * Cancels an appointment
+ */
+export const cancelAppointment = async (appointmentId, reason = '') => {
+  try {
+    calendarLogger.info('Cancelling appointment', { appointmentId, reason });
+
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments/${appointmentId}`,
+      {
+        method: 'PUT',
+        headers: getGHLHeaders(),
+        body: JSON.stringify({
+          status: 'cancelled',
+          cancellationReason: reason,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const cancelledAppointment = await response.json();
+
+    calendarLogger.success('Appointment cancelled successfully', { appointmentId });
+    toast.success('✅ Appointment cancelled!');
+
+    return {
+      success: true,
+      data: cancelledAppointment,
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error cancelling appointment', error);
+    toast.error(`❌ Failed to cancel appointment: ${error.message}`);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// ============================================================================
+// 🗑️ DELETE REQUESTS
+// ============================================================================
+
+/**
+ * 🗑️ DELETE - Delete appointment
+ * Removes an appointment from the calendar
+ */
+export const deleteAppointment = async (appointmentId) => {
+  try {
+    calendarLogger.info('Deleting appointment', { appointmentId });
+
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments/${appointmentId}`,
+      {
+        method: 'DELETE',
+        headers: getGHLHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    calendarLogger.success('Appointment deleted successfully', { appointmentId });
+    toast.success('✅ Appointment deleted successfully!');
+
+    return {
+      success: true,
+      data: { appointmentId },
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error deleting appointment', error);
+    toast.error(`❌ Failed to delete appointment: ${error.message}`);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// ============================================================================
+// 🔄 BULK OPERATIONS
+// ============================================================================
+
+/**
+ * 🔄 POST - Bulk update appointments
+ * Updates multiple appointments at once
+ */
+export const bulkUpdateAppointments = async (appointmentUpdates) => {
+  try {
+    calendarLogger.info('Bulk updating appointments', { count: appointmentUpdates.length });
+
+    const promises = appointmentUpdates.map(({ appointmentId, updates }) =>
+      updateAppointment(appointmentId, updates),
+    );
+
+    const results = await Promise.allSettled(promises);
+
+    const successful = results.filter(result => result.status === 'fulfilled' && result.value.success);
+    const failed = results.filter(result => result.status === 'rejected' || !result.value.success);
+
+    calendarLogger.success('Bulk update completed', {
+      successful: successful.length,
+      failed: failed.length,
+    });
+
+    if (successful.length > 0) {
+      toast.success(`✅ ${successful.length} appointments updated successfully!`);
+    }
+
+    if (failed.length > 0) {
+      toast.error(`❌ ${failed.length} appointments failed to update`);
+    }
+
+    return {
+      success: true,
+      data: {
+        successful: successful.length,
+        failed: failed.length,
+        results,
+      },
+    };
+
+  } catch (error) {
+    calendarLogger.error('Error in bulk update', error);
+    toast.error(`❌ Bulk update failed: ${error.message}`);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// ============================================================================
+// 🧪 TEST FUNCTIONS
+// ============================================================================
+
+/**
+ * 🧪 Test calendar API connectivity
+ * Simple test to check if the calendar API is working
+ */
+export const testCalendarApiConnection = async () => {
+  try {
+    calendarLogger.info('Testing calendar API connection...');
+
+    const response = await fetch(
+      `${GHL_CONFIG.locationUrl}/calendar/appointments`,
+      {
+        method: 'GET',
+        headers: getGHLHeaders(),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    calendarLogger.success('Calendar API connection test successful');
+
+    return {
+      success: true,
+      data: {
+        status: response.status,
+        appointmentCount: data.appointments ? data.appointments.length : 0,
+      },
+    };
+
+  } catch (error) {
+    calendarLogger.error('Calendar API connection test failed', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+/**
+ * 🧪 Test GHL configuration
+ * Check if GHL config is properly set up
+ */
+export const testGHLConfig = () => {
+  const validation = validateGHLConfig();
+  calendarLogger.info('GHL Configuration Test:', validation);
+
+  if (!validation.isValid) {
+    calendarLogger.error('GHL Configuration Issues:', validation.issues);
+    toast.error('❌ GHL Configuration has issues. Check console for details.');
+  } else {
+    calendarLogger.success('GHL Configuration is valid');
+    toast.success('✅ GHL Configuration is valid');
+  }
+
+  return validation;
+};
+
+// Default export for the calendar API functions
+/**
+ * 🎯 GET - Fetch GHL calendar list for book appointment modal
+ * Uses direct GHL API endpoint and static token
+ */
+export const getGhlCalendarList = async () => {
+  try {
+    const response = await fetch(
+      'https://services.leadconnectorhq.com/calendars/?locationId=b7vHWUGVUNQGoIlAXabY',
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer pit-1dd731f9-e51f-40f7-bf4e-9e8cd31ed75f',
+          'Version': '2021-04-15',
+        },
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    return {
+      success: true,
+      data,
+      error: null,
+    };
+  } catch (error) {
+    console.error('Error fetching GHL calendar list:', error);
+    return {
+      success: false,
+      error: error.message,
+      data: [],
+    };
+  }
+};
+const calendarApi = {
+  fetchCalendarEvents,
+  fetchAppointments,
+  fetchAppointmentsByDateRange,
+  fetchAppointmentsByUser,
+  fetchAppointmentById,
+  fetchAvailableTimeSlots,
+  bookGhlAppointment,
+  createRecurringAppointment,
+  updateAppointment,
+  completeAppointment,
+  cancelAppointment,
+  deleteAppointment,
+  bulkUpdateAppointments,
+  testCalendarApiConnection,
+  testGHLConfig,
+  getGhlCalendarList,
+};
+
+export default calendarApi;

@@ -1,0 +1,63 @@
+/* ========================================
+   🎨 ENHANCED DASHBOARD CSS MODULE
+   ======================================== */
+
+.container {
+  @apply w-full min-h-screen text-gray-800 text-base md:text-lg;
+  background: linear-gradient(120deg, #01818e 0%, #22d3ee 100%);
+  background-blend-mode: overlay;
+  padding: 0;
+  margin: 0;
+}
+
+.main {
+  @apply flex flex-col gap-6 px-4 sm:px-6 lg:px-8 py-6;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.section {
+  @apply bg-white rounded-xl shadow-sm border border-gray-100;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+.sectionPipeline {
+  @apply shadow-md;
+}
+
+.sectionCampaign,
+.sectionTasks,
+.sectionCalendar {
+  @apply shadow-sm;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .main {
+    @apply px-3 py-4 gap-4;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    @apply gap-4;
+  }
+}
+
+/* Animation Classes */
+.fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
